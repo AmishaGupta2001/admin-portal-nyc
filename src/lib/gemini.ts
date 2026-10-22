@@ -25,7 +25,7 @@ function assertPublicHttpUrl(raw: string) {
 export async function loadImage(url: string): Promise<{ mime: string; data: string }> {
   const absolute = resolveImageUrl(url);
   if (!/^https?:/i.test(absolute)) {
-    throw new GeminiError(400, "Relative image URL — set NEXT_PUBLIC_MAIN_APP_URL to your main app's origin.");
+    throw new GeminiError(400, "Relative image URL — set NEXT_MAIN_APP_URL to your main app's origin.");
   }
   assertPublicHttpUrl(absolute);
   const res = await fetch(absolute, { cache: "no-store" });

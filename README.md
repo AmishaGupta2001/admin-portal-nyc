@@ -38,7 +38,7 @@ Every API call re-reads the caller's role from the database, so demoting or bann
 ## Setup order (new features)
 
 1. Run `supabase/migrations/add_superadmin.sql` (if you haven't), then **`supabase/migrations/admin_features.sql`**.
-2. Add the new env vars from `.env.local.example` (`GEMINI_API_KEY`, `GEMINI_MODEL`, `NEXT_PUBLIC_MAIN_APP_URL`).
+2. Add the new env vars from `.env.local.example` (`GEMINI_API_KEY`, `GEMINI_MODEL`, `NEXT_MAIN_APP_URL`).
 3. Open `/dashboard/system` — every row should be green.
 4. **In the MAIN app**, add `and not is_hidden` to the feed / trending / post queries, otherwise "Hide" in Moderation only flags the post. (Bans already work everywhere: they use Supabase Auth's ban.)
 5. For identical captions to the main app, paste its Gemini prompts into `src/lib/prompts.ts`.
@@ -64,7 +64,7 @@ Admin Panel (Next.js, Vercel)
         └── Reads auth.users, profiles, images, generations, votes
 ```
 
-The admin panel **shares the same Supabase project** as your main app. It uses the `service_role` key server-side only — it never leaks to the browser. The `NEXT_PUBLIC_SUPABASE_*` vars are only used if you need client-side Supabase calls (currently not needed).
+The admin panel **shares the same Supabase project** as your main app. It uses the `service_role` key server-side only — it never leaks to the browser. The `NEXT_SUPABASE_*` vars are only used if you need client-side Supabase calls (currently not needed).
 
 ---
 
@@ -115,8 +115,8 @@ cp .env.local.example .env.local
 
 | Variable | Where to find it |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API → Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon/public key |
+| `NEXT_SUPABASE_URL` | Supabase → Settings → API → Project URL |
+| `NEXT_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role key (keep secret!) |
 | `NEXTAUTH_SECRET` | Run `openssl rand -base64 32` in your terminal |
 | `NEXTAUTH_URL` | `http://localhost:3001` for local, `https://your-admin.vercel.app` on Vercel |
@@ -183,6 +183,6 @@ Vercel → Project → Settings → Deployment Protection → set to **None** (s
 | Who can access the UI? | Only Google accounts where `profiles.is_superadmin = true` |
 | How is this checked? | NextAuth `signIn` callback, server-side, using service_role key |
 | What if someone bypasses the UI? | Every `/api/admin/*` route calls `getServerSession()` and returns 401 if missing |
-| Is service_role key safe? | It's only in `SUPABASE_SERVICE_ROLE_KEY` (server-only env var, not `NEXT_PUBLIC_`) |
+| Is service_role key safe? | It's only in `SUPABASE_SERVICE_ROLE_KEY` (server-only env var, not `NEXT_`) |
 | What if my session cookie is stolen? | NextAuth sessions are signed with `NEXTAUTH_SECRET`; rotate it to invalidate all sessions |
 # admin-portal-nyc

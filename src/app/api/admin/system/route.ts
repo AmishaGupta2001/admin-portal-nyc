@@ -13,13 +13,13 @@ export const GET = handle(async () => {
   await requirePermission("system.view");
 
   const env = {
-    SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_URL: !!process.env.NEXT_SUPABASE_URL,
+    SUPABASE_ANON_KEY: !!process.env.NEXT_SUPABASE_ANON_KEY,
     SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
     GOOGLE_OAUTH: !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET,
     GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
-    NEXT_PUBLIC_MAIN_APP_URL: !!process.env.NEXT_PUBLIC_MAIN_APP_URL,
+    NEXT_MAIN_APP_URL: !!process.env.NEXT_MAIN_APP_URL,
   };
 
   const schema = await Promise.all(

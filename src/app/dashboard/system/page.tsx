@@ -57,7 +57,7 @@ export default function SystemPage() {
         )}
         <section className="card p-5">
           <h2 className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Environment</h2>
-          {s && (Object.entries(s.env) as [string, boolean][]).map(([k, v]) => <Row key={k} ok={v} label={k} detail={!v && k === "NEXT_PUBLIC_MAIN_APP_URL" ? "Needed to display & caption curated images stored as relative paths" : undefined} />)}
+          {s && (Object.entries(s.env) as [string, boolean][]).map(([k, v]) => <Row key={k} ok={v} label={k} detail={!v && k === "NEXT_MAIN_APP_URL" ? "Needed to display & caption curated images stored as relative paths" : undefined} />)}
         </section>
         <section className="card p-5">
           <h2 className="text-[12px] font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Database & storage</h2>
