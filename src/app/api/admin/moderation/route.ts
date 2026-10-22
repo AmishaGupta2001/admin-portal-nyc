@@ -42,9 +42,9 @@ export const GET = handle(async (req: NextRequest) => {
         : error.message,
     );
 
-  const userIds = [
-    ...new Set((data ?? []).map((g: any) => g.user_id).filter(Boolean)),
-  ];
+  const userIds = Array.from(
+      new Set((data ?? []).map((g: any) => g.user_id).filter(Boolean))
+  );
 
   const { data: profiles, error: profilesError } = userIds.length
     ? await supabaseAdmin
