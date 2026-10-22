@@ -17,7 +17,7 @@ export function StatCard({ label, value, sub, icon: Icon, accent, trend }: StatC
   return (
     <div
       className={clsx("card p-5 fade-in", accent && "ring-1")}
-      style={accent ? { ringColor: "var(--accent)", borderColor: "var(--accent)" } : undefined}
+      style={accent ? { borderColor: "var(--accent)" } : undefined}
     >
       <div className="flex items-start justify-between">
         <div>
