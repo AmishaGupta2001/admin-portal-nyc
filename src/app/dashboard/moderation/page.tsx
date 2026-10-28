@@ -161,7 +161,7 @@ function ModerationInner() {
       <EditModal item={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); load(); }} />
       <Modal open={!!del} onClose={() => setDel(null)} title="Delete permanently?" size="sm"
         footer={<><Button variant="ghost" onClick={() => setDel(null)}>Cancel</Button><Button variant="danger" onClick={() => del && bulk(del, "delete")}><Trash2 size={13} /> Delete {del?.length}</Button></>}>
-        <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>This removes {del?.length} post(s) along with their votes. Remixes of them are kept but detached. If you only want it off the feed, <b>hide</b> it instead — that's reversible.</p>
+        <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>This removes {del?.length} post(s) along with their votes. Remixes of them are kept but detached. If you only want it off the feed, <b>hide</b> it instead — that&apos;s reversible.</p>
       </Modal>
     </div>
   );

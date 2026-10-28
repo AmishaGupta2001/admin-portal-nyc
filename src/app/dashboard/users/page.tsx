@@ -225,7 +225,7 @@ function BanModal({ ids, onClose, onDone }: { ids: string[] | null; onClose: () 
       footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="danger" disabled={busy || !ids.length} onClick={run}><Ban size={13} />{busy ? "Banning…" : "Ban"}</Button></>}>
       {ids.length === 0 ? <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>None of the selected users can be banned by you.</p> : (
         <>
-          <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>They'll be signed out of the app and blocked from signing in until unbanned. Their posts are kept.</p>
+          <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>They&apos;ll be signed out of the app and blocked from signing in until unbanned. Their posts are kept.</p>
           <Field label="Reason (shown only to admins)"><input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="Spam, harassment, …" className="w-full px-3 py-2 rounded-lg text-[13px] outline-none" style={inputStyle} /></Field>
         </>
       )}
@@ -362,7 +362,7 @@ function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
               </button>
             ))}
           </div>
-          {isSelf && <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>You can't change your own role.</p>}
+          {isSelf && <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>You can&apos;t change your own role.</p>}
         </section>
       )}
 

@@ -221,7 +221,7 @@ function SingleMode({ images, galleryLoading, users, authorId, reloadGallery }: 
           {remix && (
             <div className="flex items-start gap-2 text-[12px] p-2.5 rounded-lg" style={{ background: "rgba(255,170,51,0.1)", color: "var(--warning)" }}>
               <GitMerge size={14} className="mt-0.5 flex-shrink-0" />
-              <span>Remixing <b>{remix.creator}</b>'s post: “{remix.caption.slice(0, 80)}”</span>
+              <span>Remixing <b>{remix.creator}</b>&apos;s post: “{remix.caption.slice(0, 80)}”</span>
               <button onClick={() => setRemix(null)} className="ml-auto" aria-label="Cancel remix"><X size={13} /></button>
             </div>
           )}

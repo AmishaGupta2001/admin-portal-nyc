@@ -69,7 +69,7 @@ export default function IntegrityPage() {
         )}
       </div>
       <Modal open={!!purge} onClose={() => setPurge(null)} title="Purge all votes?" size="sm" footer={<><Button variant="ghost" onClick={() => setPurge(null)}>Cancel</Button><Button variant="danger" onClick={() => purge && doPurge(purge)}><Trash2 size={13} /> Purge {purge?.total_votes}</Button></>}>
-        <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>Deletes all {purge?.total_votes} votes cast by <b>{purge?.name}</b>. Their account stays active. This can't be undone.</p>
+        <p className="text-[13px]" style={{ color: "var(--text-muted)" }}>Deletes all {purge?.total_votes} votes cast by <b>{purge?.name}</b>. Their account stays active. This can&apos;t be undone.</p>
       </Modal>
     </div>
   );

@@ -23,7 +23,7 @@ export default function NotAdminPage() {
             Access Denied
           </h1>
           <p className="text-[13px] leading-relaxed" style={{ color: "#6B7280" }}>
-            Your account doesn't have superadmin access. If you believe this is an error, ask your
+            Your account doesn&apos;t have superadmin access. If you believe this is an error, ask your
             database administrator to set <code className="text-[#B4FF47]">is_superadmin = true</code> on your profile.
           </p>
         </div>
