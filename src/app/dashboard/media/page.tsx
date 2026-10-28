@@ -43,6 +43,11 @@ interface GenerationRow {
   image_url: string;
   vote_count: number;
   remix_of: string | null;
+  owner_id: string;
+  is_hidden: boolean;
+  is_featured: boolean;
+  hidden_reason: string | null;
+  moderated_at: string | null;
   created_at: string;
 }
 
@@ -62,7 +67,9 @@ export default function MediaPage() {
   const [images, setImages] = useState<ImageRow[]>([]);
   const [generations, setGenerations] = useState<GenerationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
+  const [preview, setPreview] = useState<{ url: string; title: string } | null>(null);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -77,15 +84,19 @@ export default function MediaPage() {
 
   const load = async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const [imgRes, genRes] = await Promise.all([
         fetch("/api/admin/media/images"),
         fetch("/api/admin/media/generations"),
       ]);
-      const imgData = await imgRes.json();
-      const genData = await genRes.json();
+      const [imgData, genData] = await Promise.all([imgRes.json(), genRes.json()]);
+      if (!imgRes.ok) throw new Error(imgData.error ?? "Could not load images");
+      if (!genRes.ok) throw new Error(genData.error ?? "Could not load generations");
       setImages(imgData.images ?? []);
       setGenerations(genData.generations ?? []);
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : "Could not load media");
     } finally {
       setLoading(false);
     }
@@ -115,8 +126,8 @@ export default function MediaPage() {
     setSaving(true);
     try {
       const payload = {
-        image_url: form.image_url,
-        title: form.title,
+        image_url: form.image_url.trim(),
+        title: form.title.trim(),
         tags: form.tags
           .split(",")
           .map((t) => t.trim())
@@ -133,29 +144,36 @@ export default function MediaPage() {
       });
       if (res.ok) {
         setShowModal(false);
+        toast.success(editingImage ? "Image updated" : "Image created");
         load();
       } else {
         const err = await res.json();
-        toast.error(err.error);
+        toast.error(err.error ?? "Could not save image");
       }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save image");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteImage = async (id: string) => {
-    const res = await fetch(
-      `/api/admin/media/images/${id}${forceDelete ? "?force=1" : ""}`,
-      { method: "DELETE" },
-    );
-    if (res.ok) {
-      setDeleteConfirm(null);
-      setForceDelete(false);
-      toast.success("Image deleted");
-      load();
-    } else {
-      const err = await res.json();
-      toast.error(err.error);
+    try {
+      const res = await fetch(
+        `/api/admin/media/images/${id}${forceDelete ? "?force=1" : ""}`,
+        { method: "DELETE" },
+      );
+      if (res.ok) {
+        setDeleteConfirm(null);
+        setForceDelete(false);
+        toast.success("Image deleted");
+        load();
+      } else {
+        const err = await res.json();
+        toast.error(err.error ?? "Could not delete image");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete image");
     }
   };
 
@@ -181,15 +199,20 @@ export default function MediaPage() {
   };
 
   const handleDeleteGeneration = async (id: string) => {
-    const res = await fetch(`/api/admin/media/generations/${id}`, {
-      method: "DELETE",
-    });
-    if (res.ok) {
-      setDeleteConfirm(null);
-      load();
-    } else {
-      const err = await res.json();
-      toast.error(err.error);
+    try {
+      const res = await fetch(`/api/admin/media/generations/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setDeleteConfirm(null);
+        toast.success("Generation deleted");
+        load();
+      } else {
+        const err = await res.json();
+        toast.error(err.error ?? "Could not delete generation");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not delete generation");
     }
   };
 
@@ -230,6 +253,11 @@ export default function MediaPage() {
       />
 
       <div className="p-8 space-y-6">
+        {loadError && (
+          <div role="alert" className="rounded-lg px-4 py-3 text-[13px]" style={{ background: "rgba(255,85,85,0.1)", color: "var(--danger)" }}>
+            {loadError} <button className="underline ml-2" onClick={load}>Retry</button>
+          </div>
+        )}
         {/* Tabs */}
         <div
           className="flex items-center gap-1 p-1 rounded-xl w-fit"
@@ -322,6 +350,10 @@ export default function MediaPage() {
                             src={resolveImageUrl(img.image_url)}
                             alt={img.title}
                             className="w-10 h-10 rounded-lg object-cover"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setPreview({ url: img.image_url, title: img.title })}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setPreview({ url: img.image_url, title: img.title }); }}
                             style={{ border: "1px solid var(--border)" }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display =
@@ -406,6 +438,7 @@ export default function MediaPage() {
                     <th>Preview</th>
                     <th>Caption</th>
                     <th>Creator</th>
+                    <th>Moderation</th>
                     <th>Votes</th>
                     <th>Remix</th>
                     <th>Created</th>
@@ -416,7 +449,7 @@ export default function MediaPage() {
                   {loading ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="text-center py-12"
                         style={{ color: "var(--text-muted)" }}
                       >
@@ -426,7 +459,7 @@ export default function MediaPage() {
                   ) : filteredGenerations.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={7}
+                        colSpan={8}
                         className="text-center py-12"
                         style={{ color: "var(--text-muted)" }}
                       >
@@ -439,8 +472,12 @@ export default function MediaPage() {
                         <td>
                           <img
                             src={resolveImageUrl(g.image_url)}
-                            alt=""
+                            alt={g.caption}
                             className="w-10 h-10 rounded-lg object-cover"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setPreview({ url: g.image_url, title: g.caption || "Generated media" })}
+                            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setPreview({ url: g.image_url, title: g.caption || "Generated media" }); }}
                             style={{ border: "1px solid var(--border)" }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display =
@@ -465,7 +502,11 @@ export default function MediaPage() {
                           </div>
                         </td>
                         <td style={{ color: "var(--text-muted)" }}>
-                          {g.creator_name}
+                          {g.creator_name}<div className="text-[10px] opacity-60">{g.owner_id}</div>
+                        </td>
+                        <td>
+                          <div className="flex flex-wrap gap-1">{g.is_hidden && <Badge variant="danger">Hidden</Badge>}{g.is_featured && <Badge variant="warning">Featured</Badge>}{!g.is_hidden && !g.is_featured && <Badge variant="muted">Visible</Badge>}</div>
+                          {g.hidden_reason && <div className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>{g.hidden_reason}</div>}
                         </td>
                         <td>
                           <Badge
@@ -512,6 +553,15 @@ export default function MediaPage() {
           </div>
         )}
       </div>
+
+      {preview && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.82)" }} onMouseDown={(e) => { if (e.target === e.currentTarget) setPreview(null); }}>
+          <div className="card w-full max-w-4xl p-4 space-y-3" role="dialog" aria-modal="true" aria-label={preview.title}>
+            <div className="flex items-center justify-between gap-4"><h2 className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>{preview.title}</h2><button onClick={() => setPreview(null)} aria-label="Close image preview"><X size={18} /></button></div>
+            <img src={resolveImageUrl(preview.url)} alt={preview.title} className="max-h-[75vh] w-full object-contain rounded-lg" />
+          </div>
+        </div>, document.body,
+      )}
 
       {/* Create/Edit Modal */}
 

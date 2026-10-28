@@ -7,6 +7,10 @@ const COLUMN_CHECKS: [string, string][] = [
   ["profiles", "role"], ["profiles", "is_banned"], ["profiles", "ban_reason"],
   ["generations", "is_hidden"], ["generations", "is_featured"], ["generations", "hidden_reason"],
   ["admin_audit_log", "action"],
+  ["prompt_chains", "enabled"], ["prompt_chain_steps", "step_order"], ["prompt_chain_mix", "weight"],
+  ["terms", "term"], ["generation_requests", "status"], ["ai_generation_examples", "expected_output"],
+  ["llm_providers", "provider_key"], ["llm_models", "model_key"], ["llm_responses", "latency_ms"],
+  ["allowed_signup_domains", "domain"], ["whitelisted_emails", "email"],
 ];
 
 export const GET = handle(async () => {
@@ -34,7 +38,7 @@ export const GET = handle(async () => {
 
   const counts: Record<string, number | null> = {};
   await Promise.all(
-    ["profiles", "images", "generations", "votes", "admin_audit_log"].map(async (t) => {
+    ["profiles", "images", "generations", "votes", "admin_audit_log", "prompt_chains", "prompt_chain_steps", "prompt_chain_mix", "terms", "generation_requests", "ai_generation_examples", "llm_providers", "llm_models", "llm_responses", "allowed_signup_domains", "whitelisted_emails"].map(async (t) => {
       const { count, error } = await supabaseAdmin.from(t).select("*", { count: "exact", head: true });
       counts[t] = error ? null : count ?? 0;
     })

@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
   LayoutDashboard, Users, Image, ThumbsUp, BarChart3, Wand2, ShieldAlert, Tags,
-  ScanSearch, ScrollText, Activity, LogOut, Zap, ChevronRight, Search,
+  ScanSearch, ScrollText, Activity, LogOut, Zap, ChevronRight, Search, GitBranch,
+  ListOrdered, Scale, BookOpen, ClipboardList, FlaskConical, Bot, Cpu, MessageSquareText,
+  Globe, MailCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useMe } from "@/components/admin/MeProvider";
@@ -15,11 +17,23 @@ import clsx from "clsx";
 export const NAV: { href: string; label: string; icon: LucideIcon; group: string; perm?: Permission }[] = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, group: "Insights" },
   { href: "/dashboard/stats", label: "Analytics", icon: BarChart3, group: "Insights" },
+  { href: "/dashboard/observability", label: "Observability", icon: Activity, group: "Insights", perm: "system.view" },
   { href: "/dashboard/studio", label: "Studio", icon: Wand2, group: "Create", perm: "studio.use" },
   { href: "/dashboard/moderation", label: "Moderation", icon: ShieldAlert, group: "Manage", perm: "content.moderate" },
   { href: "/dashboard/users", label: "Users", icon: Users, group: "Manage", perm: "users.view" },
   { href: "/dashboard/media", label: "Media", icon: Image, group: "Manage" },
   { href: "/dashboard/tags", label: "Tags", icon: Tags, group: "Manage" },
+  { href: "/dashboard/observability/prompt-chains", label: "Prompt chains", icon: GitBranch, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/prompt-chain-steps", label: "Chain steps", icon: ListOrdered, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/prompt-chain-mix", label: "Chain mix", icon: Scale, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/terms", label: "Terms", icon: BookOpen, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/generation-requests", label: "Generation requests", icon: ClipboardList, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/ai-generation-examples", label: "AI examples", icon: FlaskConical, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/llm-providers", label: "LLM providers", icon: Bot, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/llm-models", label: "LLM models", icon: Cpu, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/llm-responses", label: "LLM responses", icon: MessageSquareText, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/allowed-signup-domains", label: "Signup domains", icon: Globe, group: "AI operations", perm: "system.view" },
+  { href: "/dashboard/observability/whitelisted-emails", label: "Whitelisted emails", icon: MailCheck, group: "AI operations", perm: "system.view" },
   { href: "/dashboard/votes", label: "Votes", icon: ThumbsUp, group: "Trust & Safety" },
   { href: "/dashboard/integrity", label: "Vote integrity", icon: ScanSearch, group: "Trust & Safety", perm: "votes.moderate" },
   { href: "/dashboard/audit", label: "Audit log", icon: ScrollText, group: "Trust & Safety", perm: "audit.view" },

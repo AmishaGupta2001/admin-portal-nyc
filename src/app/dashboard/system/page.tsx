@@ -52,7 +52,7 @@ export default function SystemPage() {
       <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {missing.length > 0 && (
           <div className="lg:col-span-2 card p-4" style={{ borderColor: "var(--danger)" }}>
-            <p className="text-[13px] font-medium" style={{ color: "var(--danger)" }}>Database is missing {missing.length} column(s)/table(s). Run <code>supabase/migrations/admin_features.sql</code> in the Supabase SQL editor.</p>
+            <p className="text-[13px] font-medium" style={{ color: "var(--danger)" }}>Database is missing {missing.length} column(s)/table(s). Apply the admin migrations and <code>../designingforgenai/supabase/migrations/20261028000000_week7_admin_observability.sql</code> to the shared Supabase project.</p>
           </div>
         )}
         <section className="card p-5">
