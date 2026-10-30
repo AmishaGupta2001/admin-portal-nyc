@@ -51,26 +51,23 @@ export const POST = handle(async (req: NextRequest) => {
   const { email, first_name, last_name, role = "user" } = await req.json();
   const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
-  if (!normalizedEmail || !/^\S+@\S+\.\S+$/.test(normalizedEmail)) throw new HttpError(400, "A valid email is required");
+  if (!normalizedEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalizedEmail)) throw new HttpError(400, "A valid email is required");
   if (!isRole(role)) throw new HttpError(400, `role must be one of ${ROLES.join(", ")}`);
   if (role !== "user") await requirePermission("users.assign_role");
 
-  // Admin pre-provisioning is subject to the same allowlist as Google signup.
+  // Keep admin pre-provisioning aligned with the main app signup policy.
   // The database trigger remains authoritative and closes races after this check.
-  const [domains, emails] = await Promise.all([
-    supabaseAdmin.from("allowed_signup_domains").select("id", { count: "exact", head: true }).eq("enabled", true),
-    supabaseAdmin.from("whitelisted_emails").select("id", { count: "exact", head: true }).eq("enabled", true),
-  ]);
-  if (domains.error || emails.error) throw new HttpError(500, "Unable to validate the signup allowlist");
-  if ((domains.count ?? 0) + (emails.count ?? 0) > 0) {
-    const domain = normalizedEmail.split("@").at(-1) ?? "";
-    const [emailMatch, domainMatch] = await Promise.all([
-      supabaseAdmin.from("whitelisted_emails").select("id").eq("email", normalizedEmail).eq("enabled", true).maybeSingle(),
-      supabaseAdmin.from("allowed_signup_domains").select("id").eq("domain", domain).eq("enabled", true).maybeSingle(),
-    ]);
-    if (emailMatch.error || domainMatch.error) throw new HttpError(500, "Unable to validate the signup allowlist");
-    if (!emailMatch.data && !domainMatch.data) {
-      throw new HttpError(400, "Add this email address or its domain to an enabled signup allowlist before pre-provisioning the user");
+  const isColumbia = normalizedEmail.split("@").at(-1) === "columbia.edu";
+  if (!isColumbia) {
+    const { data: emailMatch, error } = await supabaseAdmin
+      .from("whitelisted_emails")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .eq("enabled", true)
+      .maybeSingle();
+    if (error) throw new HttpError(500, "Unable to validate the signup allowlist");
+    if (!emailMatch) {
+      throw new HttpError(400, "Add this exact email address to the enabled email allowlist before pre-provisioning the user");
     }
   }
 
