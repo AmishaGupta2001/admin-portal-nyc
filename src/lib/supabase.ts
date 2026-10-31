@@ -5,6 +5,7 @@ const supabaseUrl = process.env.NEXT_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_SUPABASE_ANON_KEY!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+
 // Public client — respects RLS (used for reads that match existing policies)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

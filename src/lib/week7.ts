@@ -15,6 +15,14 @@ const RESOURCES: Record<string, { table: string; writable: boolean; required: st
   "whitelisted-emails": { table: "whitelisted_emails", writable: true, required: ["email"], fields: ["email", "enabled"] },
 };
 
+export const AI_GENERATION_EXAMPLES_BUCKET = "ai-generation-examples";
+
+export function getAiGenerationExampleImagePath(inputData: unknown): string | null {
+  if (!inputData || typeof inputData !== "object" || Array.isArray(inputData)) return null;
+  const path = (inputData as Record<string, unknown>).image_path;
+  return typeof path === "string" && /^examples\/[0-9a-f-]{36}\.(?:jpg|png|webp|gif)$/i.test(path) ? path : null;
+}
+
 export function getWeek7Resource(resource: string) {
   const entry = RESOURCES[resource];
   if (!entry) throw new HttpError(404, "Unknown admin resource");

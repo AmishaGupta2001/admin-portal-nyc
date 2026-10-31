@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { audit } from "@/lib/audit";
 import { handle, HttpError, requirePermission } from "@/lib/guard";
-import { ensureWeek7ConfigurationValid, getWeek7Resource, sanitizeWeek7Row, validateWeek7Resource } from "@/lib/week7";
+import { AI_GENERATION_EXAMPLES_BUCKET, ensureWeek7ConfigurationValid, getAiGenerationExampleImagePath, getWeek7Resource, sanitizeWeek7Row, validateWeek7Resource } from "@/lib/week7";
 
 type Ctx = { params: { resource: string } };
 
@@ -18,7 +18,19 @@ export const GET = handle(async (req: NextRequest, { params }: Ctx) => {
   if (params.resource === "llm-responses") query = supabaseAdmin.from(entry.table).select("*, generation_requests(prompt,status,user_id), llm_models(display_name,model_key), llm_providers(name,provider_key)", { count: "exact" }).order("created_at", { ascending: false }).range(from, to);
   const { data, error, count } = await query;
   if (error) throw new HttpError(500, error.message);
-  return NextResponse.json({ rows: sanitizeWeek7Row(params.resource, data ?? []), count: count ?? 0, page, limit });
+  let rows = sanitizeWeek7Row(params.resource, data ?? []) as Record<string, any>[];
+  if (params.resource === "ai-generation-examples") {
+    const paths = Array.from(new Set(rows.map((row) => getAiGenerationExampleImagePath(row.input_data)).filter((path): path is string => Boolean(path))));
+    if (paths.length) {
+      const { data: signedUrls, error: signedUrlError } = await supabaseAdmin.storage.from(AI_GENERATION_EXAMPLES_BUCKET).createSignedUrls(paths, 60 * 30);
+      if (signedUrlError) console.warn("Could not create AI example image previews:", signedUrlError.message);
+      const byPath = new Map((signedUrls ?? []).filter((item) => item.path && item.signedUrl).map((item) => [item.path as string, item.signedUrl as string]));
+      rows = rows.map((row) => ({ ...row, image_preview_url: byPath.get(getAiGenerationExampleImagePath(row.input_data) ?? "") ?? null }));
+    } else {
+      rows = rows.map((row) => ({ ...row, image_preview_url: null }));
+    }
+  }
+  return NextResponse.json({ rows, count: count ?? 0, page, limit });
 });
 
 export const POST = handle(async (req: NextRequest, { params }: Ctx) => {

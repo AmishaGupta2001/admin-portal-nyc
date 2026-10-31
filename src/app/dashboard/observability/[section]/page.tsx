@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/api";
+import AiGenerationExamplesPanel from "@/components/admin/AiGenerationExamplesPanel";
 
 type Field = { key: string; label: string; kind?: "text" | "long" | "number" | "boolean" | "json"; required?: boolean };
 type Section = { title: string; slug: string; writable: boolean; fields: Field[] };
@@ -31,7 +32,12 @@ const date = (value: unknown) => value ? new Date(String(value)).toLocaleString(
 
 export default function Week7SectionPage() {
   const params = useParams<{ section: string }>();
-  const section = SECTIONS[params.section];
+  if (params.section === "ai-generation-examples") return <AiGenerationExamplesPanel />;
+  return <GenericWeek7SectionPage sectionSlug={params.section} />;
+}
+
+function GenericWeek7SectionPage({ sectionSlug }: { sectionSlug: string }) {
+  const section = SECTIONS[sectionSlug];
   const toast = useToast();
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [page, setPage] = useState(0);

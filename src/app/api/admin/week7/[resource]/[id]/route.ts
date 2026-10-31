@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { audit } from "@/lib/audit";
 import { handle, HttpError, requirePermission } from "@/lib/guard";
-import { ensureWeek7ConfigurationValid, getWeek7Resource, isResourceWritable, sanitizeWeek7Row, validateWeek7Resource } from "@/lib/week7";
+import { AI_GENERATION_EXAMPLES_BUCKET, ensureWeek7ConfigurationValid, getAiGenerationExampleImagePath, getWeek7Resource, isResourceWritable, sanitizeWeek7Row, validateWeek7Resource } from "@/lib/week7";
 
 type Ctx = { params: { resource: string; id: string } };
 
@@ -24,11 +24,27 @@ export const PATCH = handle(async (req: NextRequest, { params }: Ctx) => {
   const entry = getWeek7Resource(params.resource);
   const patch = validateWeek7Resource(params.resource, await req.json(), true);
   await ensureWeek7ConfigurationValid(params.resource, patch, params.id);
+  let previousImagePath: string | null = null;
+  if (params.resource === "ai-generation-examples" && patch.input_data !== undefined) {
+    const { data: previous, error: previousError } = await supabaseAdmin.from(entry.table).select("input_data").eq("id", params.id).maybeSingle();
+    if (previousError) throw new HttpError(500, previousError.message);
+    if (!previous) throw new HttpError(404, "Record not found");
+    previousImagePath = getAiGenerationExampleImagePath(previous.input_data);
+  }
   const { data, error } = await supabaseAdmin.from(entry.table).update(patch).eq("id", params.id).select().maybeSingle();
   if (error) throw new HttpError(400, error.message);
   if (!data) throw new HttpError(404, "Record not found");
+  const nextImagePath = params.resource === "ai-generation-examples" ? getAiGenerationExampleImagePath(data.input_data) : null;
+  let imageCleanupWarning = false;
+  if (previousImagePath && previousImagePath !== nextImagePath) {
+    const { error: cleanupError } = await supabaseAdmin.storage.from(AI_GENERATION_EXAMPLES_BUCKET).remove([previousImagePath]);
+    if (cleanupError) {
+      imageCleanupWarning = true;
+      console.error("Could not remove replaced AI example image:", cleanupError.message);
+    }
+  }
   await audit(actor, `week7.${params.resource}.update`, { type: params.resource, id: params.id }, patch);
-  return NextResponse.json({ row: sanitizeWeek7Row(params.resource, data) });
+  return NextResponse.json({ row: sanitizeWeek7Row(params.resource, data), imageCleanupWarning });
 });
 
 export const DELETE = handle(async (_req: NextRequest, { params }: Ctx) => {
@@ -47,9 +63,24 @@ export const DELETE = handle(async (_req: NextRequest, { params }: Ctx) => {
       if (chain?.enabled && (count ?? 0) <= 1) throw new HttpError(409, "Disable the chain or add another enabled step before deleting its last enabled step");
     }
   }
+  let imagePath: string | null = null;
+  if (params.resource === "ai-generation-examples") {
+    const { data: example, error: exampleError } = await supabaseAdmin.from(entry.table).select("input_data").eq("id", params.id).maybeSingle();
+    if (exampleError) throw new HttpError(500, exampleError.message);
+    if (!example) throw new HttpError(404, "Record not found");
+    imagePath = getAiGenerationExampleImagePath(example.input_data);
+  }
   const { error, count } = await supabaseAdmin.from(entry.table).delete({ count: "exact" }).eq("id", params.id);
   if (error) throw new HttpError(409, error.message);
   if (count === 0) throw new HttpError(404, "Record not found");
+  let imageCleanupWarning = false;
+  if (imagePath) {
+    const { error: cleanupError } = await supabaseAdmin.storage.from(AI_GENERATION_EXAMPLES_BUCKET).remove([imagePath]);
+    if (cleanupError) {
+      imageCleanupWarning = true;
+      console.error("Could not remove deleted AI example image:", cleanupError.message);
+    }
+  }
   await audit(actor, `week7.${params.resource}.delete`, { type: params.resource, id: params.id });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, imageCleanupWarning });
 });
